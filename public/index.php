@@ -30,9 +30,6 @@ spl_autoload_register(static function (string $sinif): void {
 
 App\Core\Env::yukle(KOK . '/.env');
 
-// Geçici yanıt: router bir sonraki adımda bu satırların yerini alacak
-header('Content-Type: application/json; charset=utf-8');
-echo json_encode([
-    'uygulama' => 'CampusStock',
-    'ortam'    => App\Core\Env::al('APP_ENV', 'production'),
-], JSON_UNESCAPED_UNICODE);
+$router = new App\Core\Router();
+(require KOK . '/config/routes.php')($router);
+$router->calistir(App\Core\Request::yakala());
