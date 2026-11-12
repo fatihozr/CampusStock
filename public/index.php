@@ -28,6 +28,7 @@ spl_autoload_register(static function (string $sinif): void {
     }
 });
 
+App\Core\HataYakalayici::kaydet();
 App\Core\Env::yukle(KOK . '/.env');
 
 $router = new App\Core\Router();
