@@ -1,0 +1,10 @@
+# Metin dosyaları depoda her zaman LF satır sonuyla saklanır
+* text=auto eol=lf
+
+# İkili dosyalar dönüştürülmez
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
