@@ -1,0 +1,141 @@
+<?php
+
+use App\Config\Router;
+use App\Controllers\AuthController;
+use App\Controllers\DashboardController;
+use App\Controllers\PosController;
+use App\Controllers\SaleController;
+use App\Controllers\StockController;
+use App\Controllers\CategoryController;
+use App\Controllers\BrandController;
+use App\Controllers\CustomerController;
+use App\Controllers\ReportController;
+use App\Controllers\ImportController;
+use App\Controllers\UserController;
+
+// API Controllers
+use App\Controllers\Api\ProductApiController;
+use App\Controllers\Api\CategoryApiController;
+use App\Controllers\Api\BrandApiController;
+use App\Controllers\Api\PosApiController;
+use App\Controllers\Api\CustomerApiController;
+use App\Controllers\Api\ReportApiController;
+
+// ==========================================================
+// 1. KULLANICI KİMLİK DOĞRULAMA (AUTH) ROTALARI
+// ==========================================================
+Router::get('/login', [AuthController::class, 'login']);
+Router::post('/login', [AuthController::class, 'handleLogin']);
+Router::get('/logout', [AuthController::class, 'logout']);
+
+Router::get('/', function () {
+    if (\App\Helpers\Auth::check()) {
+        redirect('/dashboard');
+    } else {
+        redirect('/login');
+    }
+});
+
+// ==========================================================
+// 2. YÖNETİM PANELİ VE RAPORLAMA ROTALARI
+// ==========================================================
+Router::get('/dashboard', [DashboardController::class, 'index']);
+Router::get('/api/global-search', [DashboardController::class, 'globalSearch']);
+
+// ==========================================================
+// 3. KIRTASİYE HIZLI SATIŞ (POS) & SATIŞ GEÇMİŞİ ROTALARI
+// ==========================================================
+Router::get('/pos', [PosController::class, 'index']);
+Router::get('/sales', [SaleController::class, 'index']);
+Router::get('/sales/detail', [SaleController::class, 'detail']);
+Router::post('/sales/return', [SaleController::class, 'handleReturn']);
+
+// ==========================================================
+// 4. KIRTASİYE ÜRÜN VE STOK YÖNETİMİ ROTALARI
+// ==========================================================
+Router::get('/products', [StockController::class, 'index']);
+Router::get('/products/create', [StockController::class, 'create']);
+Router::post('/products/store', [StockController::class, 'store']);
+Router::get('/products/detail', [StockController::class, 'detail']);
+Router::post('/products/update', [StockController::class, 'update']);
+Router::post('/products/delete', [StockController::class, 'delete']);
+Router::post('/products/stock-in', [StockController::class, 'stockIn']);
+Router::post('/products/stock-out', [StockController::class, 'stockOut']);
+Router::get('/products/movements', [StockController::class, 'movements']);
+
+// ==========================================================
+// 5. KATEGORİ, MARKA VE MÜŞTERİ (CARİ) ROTALARI
+// ==========================================================
+Router::get('/categories', [CategoryController::class, 'index']);
+Router::post('/categories/store', [CategoryController::class, 'store']);
+
+Router::get('/brands', [BrandController::class, 'index']);
+Router::post('/brands/store', [BrandController::class, 'store']);
+
+Router::get('/customers', [CustomerController::class, 'index']);
+Router::post('/customers/store', [CustomerController::class, 'store']);
+Router::post('/customers/payment', [CustomerController::class, 'handlePayment']);
+
+// Raporlar & Dışa Aktarım
+Router::get('/reports', [ReportController::class, 'index']);
+Router::get('/reports/export', [ReportController::class, 'export']);
+Router::get('/reports/pdf', [ReportController::class, 'pdf']);
+
+// Excel İçe Aktarım
+Router::get('/import', [ImportController::class, 'index']);
+Router::post('/import/upload', [ImportController::class, 'upload']);
+Router::post('/import/preview', [ImportController::class, 'preview']);
+Router::post('/import/process', [ImportController::class, 'process']);
+Router::get('/import/template', [ImportController::class, 'template']);
+
+// Kullanıcılar
+Router::get('/users', [UserController::class, 'index']);
+Router::post('/users/store', [UserController::class, 'storeUser']);
+Router::post('/users/update', [UserController::class, 'updateUser']);
+Router::post('/users/delete', [UserController::class, 'deleteUser']);
+
+// ==========================================================
+// 6. FRONTEND İÇİN RESTFUL JSON API (V1) ROTALARI
+// ==========================================================
+
+// Ürün API
+Router::get('/api/v1/products', [ProductApiController::class, 'index']);
+Router::post('/api/v1/products', [ProductApiController::class, 'store']);
+Router::get('/api/v1/products/barcode/{barcode}', [ProductApiController::class, 'barcode']);
+Router::get('/api/v1/products/{id}', [ProductApiController::class, 'show']);
+Router::put('/api/v1/products/{id}', [ProductApiController::class, 'update']);
+Router::post('/api/v1/products/update', [ProductApiController::class, 'update']);
+Router::delete('/api/v1/products/{id}', [ProductApiController::class, 'destroy']);
+Router::post('/api/v1/products/adjust-stock', [ProductApiController::class, 'adjustStock']);
+
+// Kategori & Marka API
+Router::get('/api/v1/categories', [CategoryApiController::class, 'index']);
+Router::post('/api/v1/categories', [CategoryApiController::class, 'store']);
+Router::get('/api/v1/brands', [BrandApiController::class, 'index']);
+Router::post('/api/v1/brands', [BrandApiController::class, 'store']);
+
+// POS, Sepet & Satış API
+Router::post('/api/v1/pos/calculate', [PosApiController::class, 'calculate']);
+Router::post('/api/v1/pos/checkout', [PosApiController::class, 'checkout']);
+Router::get('/api/v1/pos/sales', [PosApiController::class, 'sales']);
+Router::get('/api/v1/pos/sales/{id}', [PosApiController::class, 'saleDetail']);
+Router::post('/api/v1/pos/sales/{id}/return', [PosApiController::class, 'returnItem']);
+
+// Müşteri / Cari API
+Router::get('/api/v1/customers', [CustomerApiController::class, 'index']);
+Router::post('/api/v1/customers', [CustomerApiController::class, 'store']);
+Router::get('/api/v1/customers/{id}', [CustomerApiController::class, 'show']);
+Router::post('/api/v1/customers/{id}/payment', [CustomerApiController::class, 'payment']);
+
+// Rapor API
+Router::get('/api/v1/reports/daily-z-report', [ReportApiController::class, 'dailyZReport']);
+Router::get('/api/v1/reports/top-selling', [ReportApiController::class, 'topSelling']);
+Router::get('/api/v1/reports/critical-stock', [ReportApiController::class, 'criticalStock']);
+Router::get('/api/v1/reports/inventory-valuation', [ReportApiController::class, 'inventoryValuation']);
+
+// Kısayol Yönlendirmeleri
+Router::get('/stock', function() { redirect('/products'); });
+Router::get('/stocks', function() { redirect('/products'); });
+Router::get('/kurulum', function() {
+    require_once dirname(__DIR__) . '/veritabani_ve_kurulum/kirtasiye_kurulum.php';
+});
