@@ -1,0 +1,25 @@
+# Ortam Değişkenleri
+.env
+
+# Geçici Depolama & Loglar
+storage/logs/*.log
+storage/cache/*
+storage/sessions/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/sessions/.gitkeep
+
+# Bağımlılıklar
+vendor/
+composer.phar
+
+# İşletim Sistemi Dosyaları
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editör
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
