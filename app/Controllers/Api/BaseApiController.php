@@ -80,5 +80,64 @@ class BaseApiController
         }
         return 0;
     }
+
+    /**
+     * Extract Bearer token from HTTP Authorization header
+     */
+    protected function getBearerToken(): ?string
+    {
+        $headers = '';
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $headers = trim($_SERVER['HTTP_AUTHORIZATION']);
+        } elseif (isset($_SERVER['Authorization'])) {
+            $headers = trim($_SERVER['Authorization']);
+        } elseif (function_exists('apache_request_headers')) {
+            $requestHeaders = apache_request_headers();
+            $requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
+            if (isset($requestHeaders['Authorization'])) {
+                $headers = trim($requestHeaders['Authorization']);
+            }
+        }
+
+        if (!empty($headers) && preg_match('/Bearer\s(\S+)/i', $headers, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get authenticated user via Token or Session
+     */
+    protected function getAuthUser(): ?array
+    {
+        $token = $this->getBearerToken();
+        if ($token) {
+            $tokenModel = new \App\Models\ApiToken();
+            $user = $tokenModel->findUserByToken($token);
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // Fallback to active PHP Session
+        if (\App\Helpers\Auth::check()) {
+            return \App\Helpers\Auth::user();
+        }
+
+        return null;
+    }
+
+    /**
+     * Require authenticated user, exit with 401 if unauthorized
+     */
+    protected function requireAuthUser(): array
+    {
+        $user = $this->getAuthUser();
+        if (!$user) {
+            $this->error('Yetkisiz erişim. Lütfen geçerli bir Bearer token veya oturum ile giriş yapınız.', 401);
+        }
+        return $user;
+    }
 }
 

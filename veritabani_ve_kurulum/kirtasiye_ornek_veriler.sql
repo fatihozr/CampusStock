@@ -123,3 +123,4 @@ INSERT INTO cash_movements (user_id, movement_type, amount, payment_method, refe
 (2, 'opening_balance', 1000.00, 'cash', 'KASA-DEVIR-01', 'Güne başlama açılış nakit avansı', NOW() - INTERVAL 5 HOUR),
 (2, 'sale_cash', 218.50, 'cash', 'KRT-20261118-0001', 'POS Fiş No: KRT-20261118-0001 Nakit Satış', NOW() - INTERVAL 2 HOUR),
 (2, 'sale_card', 292.50, 'credit_card', 'KRT-20261118-0002', 'POS Fiş No: KRT-20261118-0002 Kredi Kartı Satış', NOW() - INTERVAL 1 HOUR);
+

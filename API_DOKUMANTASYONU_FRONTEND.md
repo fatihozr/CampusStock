@@ -307,34 +307,321 @@ Satışı onaylar, stoktan atomik olarak düşer, stok hareketini kaydeder, kasa
 
 ---
 
-## 💻 7. Frontend Entegrasyon Örneği (JavaScript / Fetch)
+## 🔐 7. Kimlik Doğrulama & Kullanıcı API'si (`/auth`)
+
+Tüm kullanıcılar ve öğrenciler bu API üzerinden oturum açar. Oturum açıldığında bir `Bearer` token döndürülür. Korumalı uç noktalara istek atarken bu token `Authorization: Bearer <token>` başlığıyla iletilmelidir.
+
+### 7.1 Giriş Yap (Login)
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/auth/login`
+- **Request Body:**
+```json
+{
+  "username": "kasiyer",
+  "password": "admin123"
+}
+```
+*(veya `"email": "admin@kirtasiye.local"` kullanılabilir)*
+
+**Başarılı Yanıt Örneği (`200 OK`):**
+```json
+{
+  "success": true,
+  "message": "Giriş başarılı",
+  "data": {
+    "token": "cs_f48e50c668127d0fb154405c07e813fc27b0aeb5443b210cbf575d10842d9b40",
+    "token_type": "Bearer",
+    "expires_at": "2026-12-23 19:58:25",
+    "user": {
+      "id": 2,
+      "username": "kasiyer",
+      "email": "kasiyer@campusstock.com",
+      "first_name": "Ayşe",
+      "last_name": "Demir",
+      "phone": "05552223344",
+      "title": "Kırtasiye Kasiyeri",
+      "role_id": 4,
+      "role_slug": "cashier",
+      "role_name": "Kasiyer"
+    }
+  }
+}
+```
+
+### 7.2 Öğrenci / Müşteri Kaydı (Register)
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/auth/register`
+- **Request Body:**
+```json
+{
+  "username": "ogrenci_ali",
+  "email": "ali.kaya@itu.edu.tr",
+  "password": "GucluSifre123!",
+  "first_name": "Ali",
+  "last_name": "Kaya",
+  "phone": "05441234567"
+}
+```
+
+### 7.3 Aktif Kullanıcı Profilini Getir (Me)
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/auth/me`
+- **Header:** `Authorization: Bearer <token>`
+
+### 7.4 Çıkış Yap (Logout)
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/auth/logout`
+- **Header:** `Authorization: Bearer <token>`
+
+---
+
+## 🎓 8. Üniversiteler & Kampüsler API'si (`/universities`)
+
+Öğrenciler uygulamaya girdiğinde kendi üniversitelerini ve kampüslerini seçer.
+
+### 8.1 Üniversiteleri Listele
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/universities`
+
+### 8.2 Üniversite Detayı
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/universities/{id}`
+
+### 8.3 Üniversiteye Ait Mağazaları Listele
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/universities/{id}/stores`
+
+---
+
+## 🏪 9. Kampüs Mağazaları API'si (`/stores`)
+
+Kampüs içinde yer alan kırtasiye mağazalarını listeler.
+
+### 9.1 Mağazaları Listele
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/stores`
+- **Query Parametreleri:** `?university_id=1`
+
+### 9.2 Mağaza Detayı
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/stores/{id}`
+
+### 9.3 Mağazadaki Ürünleri Listele (Vitrin / Arama)
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/stores/{id}/products`
+- **Query Parametreleri:** `?search=defter`, `?category_id=1`, `?page=1`
+
+---
+
+## 📦 10. Öğrenci Online Siparişleri & Gel-Al Motoru (`/orders`)
+
+Öğrenciler ders aralarında sıraya girmemek için sepetlerindeki ürünleri sipariş verir, kendilerine verilen kısa **Gel-Al Teslimat Kodu (Örn: `CS-1310`)** ile kırtasiyeden teslim alırlar.
+
+### 10.1 Yeni Sipariş Oluştur (Gel-Al Checkout)
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/orders`
+- **Header:** `Authorization: Bearer <token>` *(isteğe bağlı, misafir öğrenci için varsayılan öğrenci kullanılır)*
+- **Request Body:**
+```json
+{
+  "store_id": 1,
+  "payment_method": "cash_pickup",
+  "notes": "Ders çıkışı 14:00 gibi gelip teslim alacağım.",
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    },
+    {
+      "product_id": 5,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+**Başarılı Yanıt Örneği (`201 Created`):**
+```json
+{
+  "success": true,
+  "message": "Siparişiniz başarıyla alındı. Kampüs kırtasiyesinden Gel-Al kodunuzla teslim alabilirsiniz.",
+  "data": {
+    "id": 12,
+    "order_no": "ORD-20261123-5D521",
+    "student_id": 1,
+    "store_id": 1,
+    "total_amount": 330.00,
+    "discount_amount": 0.00,
+    "final_amount": 330.00,
+    "payment_status": "pending",
+    "payment_method": "cash_pickup",
+    "order_status": "received",
+    "pickup_code": "CS-1310",
+    "notes": "Ders çıkışı 14:00 gibi gelip teslim alacağım.",
+    "items": [
+      {
+        "id": 24,
+        "product_id": 1,
+        "product_name": "Faber-Castell Grip 2011",
+        "quantity": 2.0,
+        "unit_price": 165.00,
+        "line_total": 330.00
+      }
+    ]
+  }
+}
+```
+
+### 10.2 Gel-Al Teslimat Kodunu Doğrula (Kasiyer Ekranı İçin)
+Kasiyer öğrencinin söylediği kodu girdiğinde sipariş açılır:
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/orders/verify-pickup`
+- **Request Body:**
+```json
+{
+  "pickup_code": "CS-1310"
+}
+```
+
+### 10.3 Siparişleri Listele & Filtrele
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/orders` (Öğrenci sadece kendi siparişlerini görür; Kasiyer/Yönetici tüm mağaza siparişlerini listeler)
+- **Query Parametreleri:** `?status=received`, `?store_id=1`
+
+### 10.4 Sipariş Durumunu Güncelle (Kasiyer / Görevli)
+- **Metot:** `PUT` veya `POST`
+- **Endpoint:** `/api/v1/orders/{id}/status`
+- **Header:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "status": "ready"
+}
+```
+*(Durumlar: `received`, `preparing`, `ready`, `delivered`, `cancelled`)*
+
+---
+
+## 🖨️ 11. Fotokopi & Belge Baskı Hizmeti API'si (`/print-jobs`)
+
+Öğrenciler slaytları, PDF ders notlarını veya tezlerini sistemden yükleyip baskı talebi oluşturabilirler.
+
+### 11.1 Güncel Baskı Fiyat Tarifesini Getir
+Frontend'de dinamik fiyat hesaplayıcı bileşeni için kullanılır:
+- **Metot:** `GET`
+- **Endpoint:** `/api/v1/print-jobs/pricing`
+
+**Yanıt:**
+```json
+{
+  "success": true,
+  "data": {
+    "bw": { "single_sided": 1.0, "double_sided": 1.5 },
+    "color": { "single_sided": 5.0, "double_sided": 8.0 },
+    "binding": { "none": 0.0, "staple": 5.0, "spiral": 35.0 },
+    "currency": "TRY"
+  }
+}
+```
+
+### 11.2 Canlı Baskı Maliyeti Hesapla (Dry-run)
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/print-jobs/calculate`
+- **Request Body:**
+```json
+{
+  "page_count": 40,
+  "color_mode": "bw",
+  "double_sided": 1,
+  "binding": "spiral",
+  "copies": 1
+}
+```
+**Yanıt:**
+```json
+{
+  "success": true,
+  "data": {
+    "page_count": 40,
+    "sheet_count": 20,
+    "copies": 1,
+    "color_mode": "bw",
+    "double_sided": true,
+    "binding": "spiral",
+    "print_cost_per_copy": 30.00,
+    "binding_cost": 35.00,
+    "total_price": 65.00,
+    "currency": "TRY"
+  }
+}
+```
+
+### 11.3 Baskı Talebi Gönder
+- **Metot:** `POST`
+- **Endpoint:** `/api/v1/print-jobs`
+- **Request Body:**
+```json
+{
+  "store_id": 1,
+  "document_name": "Diferansiyel Denklemler Vize Notları.pdf",
+  "page_count": 40,
+  "color_mode": "bw",
+  "double_sided": 1,
+  "binding": "spiral",
+  "copies": 1,
+  "notes": "Arka kapak şeffaf olsun lütfen"
+}
+```
+
+---
+
+## 💻 12. Frontend Entegrasyon Örneği (JavaScript / Fetch)
 
 ```javascript
-// Barkod okuyucu tetiklendiğinde veya arama yapıldığında:
-async function handleBarcodeScan(barcode) {
-    const res = await fetch(`http://localhost/api/v1/products/barcode/${barcode}`);
-    const json = await res.json();
-    if (json.success) {
-        console.log("Bulunan Ürün:", json.data);
-        // Sepete ekle state'ini tetikle
+const API_URL = "http://localhost:8000/api/v1";
+
+// 1. Giriş yapma ve Token saklama:
+async function login(username, password) {
+    const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    });
+    const result = await res.json();
+    if (result.success) {
+        localStorage.setItem("token", result.data.token);
+        localStorage.setItem("user", JSON.stringify(result.data.user));
     }
 }
 
-// Satış tamamlama:
-async function submitCheckout(cartItems, customerId, paymentType) {
-    const response = await fetch('http://localhost/api/v1/pos/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+// 2. Token ile Korumalı İstek Atma:
+async function getMyProfile() {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/auth/me`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    return await res.json();
+}
+
+// 3. Gel-Al Siparişi Oluşturma:
+async function submitCampusOrder(storeId, cartItems) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
-            items: cartItems,
-            customer_id: customerId,
-            payment_method: paymentType
+            store_id: storeId,
+            payment_method: "cash_pickup",
+            items: cartItems.map(item => ({ product_id: item.id, quantity: item.qty }))
         })
     });
-    const result = await response.json();
-    if (result.success) {
-        alert("Satış Fişi No: " + result.data.receipt_no);
-        // Fiş yazdırma penceresini aç
+    const data = await res.json();
+    if (data.success) {
+        alert(`Siparişiniz alındı! Gel-Al Teslimat Kodunuz: ${data.data.pickup_code}`);
     }
 }
 ```
+

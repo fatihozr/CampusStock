@@ -331,6 +331,22 @@ class Product
     }
 
     /**
+     * Helper: decrease stock for orders or POS
+     */
+    public function decreaseStock(int $productId, float $quantity, string $refType = 'order', ?string $refId = null): bool
+    {
+        return $this->adjustStock($productId, -$quantity, 'sale', $refType, $refId);
+    }
+
+    /**
+     * Helper: increase stock for cancellations or restock
+     */
+    public function increaseStock(int $productId, float $quantity, string $refType = 'cancel', ?string $refId = null): bool
+    {
+        return $this->adjustStock($productId, $quantity, 'adjustment', $refType, $refId);
+    }
+
+    /**
      * Generate unique SKU code
      */
     public function generateCode(): string

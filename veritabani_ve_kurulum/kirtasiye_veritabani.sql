@@ -275,3 +275,110 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_audit_created (created_at),
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- 15. ÜNİVERSİTELER & KAMPÜSLER (CampusStock Çoklu Kampüs Altyapısı)
+CREATE TABLE IF NOT EXISTS universities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) UNIQUE NOT NULL,
+    city VARCHAR(80) NOT NULL,
+    domain VARCHAR(100) NULL,
+    code VARCHAR(50) UNIQUE NULL,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 16. KAMPÜS KIRTASİYELERİ / MAĞAZALARI
+CREATE TABLE IF NOT EXISTS stores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    university_id INT NOT NULL,
+    user_id INT NULL,
+    name VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) UNIQUE NOT NULL,
+    phone VARCHAR(30) NULL,
+    location_desc VARCHAR(255) NULL,
+    min_order_amount DECIMAL(10,2) DEFAULT 0.00,
+    is_active TINYINT(1) DEFAULT 1,
+    opens_at TIME DEFAULT '08:30:00',
+    closes_at TIME DEFAULT '19:00:00',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_store_univ (university_id),
+    CONSTRAINT fk_store_univ FOREIGN KEY (university_id) REFERENCES universities (id) ON DELETE CASCADE,
+    CONSTRAINT fk_store_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 17. API ERİŞİM TOKENLARI (Frontend / Mobil İçin Bearer Token)
+CREATE TABLE IF NOT EXISTS api_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(128) UNIQUE NOT NULL,
+    name VARCHAR(100) DEFAULT 'auth_token',
+    last_used_at DATETIME NULL,
+    expires_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_token (token),
+    CONSTRAINT fk_token_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 18. ÖĞRENCİ ÇEVRİMİÇİ SİPARİŞLERİ (Campus Online Orders)
+CREATE TABLE IF NOT EXISTS orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_no VARCHAR(60) UNIQUE NOT NULL,
+    student_id INT NOT NULL,
+    store_id INT NOT NULL DEFAULT 1,
+    total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    final_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    payment_status ENUM('pending', 'paid', 'refunded', 'failed') DEFAULT 'pending',
+    payment_method ENUM('online_card', 'cash_pickup', 'card_pickup') DEFAULT 'cash_pickup',
+    order_status ENUM('received', 'preparing', 'ready', 'delivered', 'cancelled') DEFAULT 'received',
+    pickup_code VARCHAR(10) NOT NULL,
+    notes TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_order_student (student_id),
+    INDEX idx_order_store (store_id),
+    INDEX idx_order_pickup (pickup_code),
+    CONSTRAINT fk_order_student FOREIGN KEY (student_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_order_store FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 19. SİPARİŞ KALEMLERİ
+CREATE TABLE IF NOT EXISTS order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    line_total DECIMAL(10,2) NOT NULL,
+    INDEX idx_ord_item_ord (order_id),
+    CONSTRAINT fk_ord_item_parent FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ord_item_prod FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. FOTOKOPİ VE BELGE BASKI TALEPLERİ (Print & Copy Jobs)
+CREATE TABLE IF NOT EXISTS print_jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    store_id INT NOT NULL DEFAULT 1,
+    document_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NULL,
+    page_count INT NOT NULL DEFAULT 1,
+    color_mode ENUM('bw', 'color') DEFAULT 'bw',
+    double_sided TINYINT(1) DEFAULT 1,
+    binding ENUM('none', 'staple', 'spiral') DEFAULT 'none',
+    copies INT NOT NULL DEFAULT 1,
+    total_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status ENUM('pending', 'printing', 'ready', 'delivered', 'cancelled') DEFAULT 'pending',
+    pickup_code VARCHAR(10) NOT NULL,
+    notes TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_print_student (student_id),
+    INDEX idx_print_store (store_id),
+    CONSTRAINT fk_print_student FOREIGN KEY (student_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_print_store FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
