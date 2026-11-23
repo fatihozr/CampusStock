@@ -42,3 +42,4 @@ class BrandApiController extends BaseApiController
         }
     }
 }
+

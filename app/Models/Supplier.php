@@ -51,3 +51,4 @@ class Supplier
         return (int)$this->db->lastInsertId();
     }
 }
+

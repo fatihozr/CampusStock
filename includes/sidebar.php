@@ -206,7 +206,7 @@ $moduleName = $activeModule === 'furniture' ? 'Mobilyalar' : 'Kırtasiye Ürünl
             <?php if (Auth::hasPermission('admin')): ?>
                 <!-- Birim & Daire Başkanlıkları -->
                 <li class="nav-item">
-                    <a class="nav-link <?= $activeTab === 'departments' ? 'active' : '' ?>" href="<?= base_url('departments') ?>">
+                    <a class="nav-link <?= (($activeTab ?? '') === 'departments') ? 'active' : '' ?>" href="<?= base_url('departments') ?>">
                         <i class="bi bi-diagram-3"></i>
                         <span>Şirket Departmanları</span>
                     </a>

@@ -4,9 +4,15 @@ namespace App\Controllers;
 
 use App\Helpers\Auth;
 use App\Models\Product;
-use App\Models\Department;
+use App\Models\Customer;
+use App\Models\Category;
+use App\Models\Brand;
+use App\Models\Sale;
 use App\Models\StockMovement;
 use App\Models\StockRequest;
+use App\Models\Department;
+use App\Config\Database;
+use PDO;
 
 class DashboardController
 {
@@ -17,73 +23,94 @@ class DashboardController
     {
         Auth::requireAuth();
 
-        $currentUser    = Auth::user();
-        $productModel   = new Product();
-        $departmentModel= new Department();
-        $movementModel  = new StockMovement();
-        $requestModel   = new StockRequest();
+        $currentUser     = Auth::user();
+        $productModel    = new Product();
+        $customerModel   = new Customer();
+        $categoryModel   = new Category();
+        $brandModel      = new Brand();
+        $saleModel       = new Sale();
+        $movementModel   = new StockMovement();
+        $requestModel    = new StockRequest();
+        $departmentModel = new Department();
 
-        $allProducts = $productModel->getAll();
-        $totalStockCount = count($allProducts);
-        $criticalStocks = $productModel->getCriticalStock();
+        $allProducts        = $productModel->getAll();
+        $totalStockCount    = count($allProducts);
+        $criticalStocks     = $productModel->getCriticalStock(10);
         $criticalStockCount = count($criticalStocks);
-        $departmentCount = count($departmentModel->getAll());
+        $customerCount      = count($customerModel->getAll());
+        $dailySummary       = $saleModel->getDailySummary();
 
+        // Stats array designed for view compatibility
         $stats = [
-            'total_stock_items' => $totalStockCount,
-            'critical_stock'    => $criticalStockCount,
-            'active_departments'=> $departmentCount,
-            'pending_requests'  => count($requestModel->getAll('pending'))
+            'total_stock_items'  => $totalStockCount,
+            'critical_stock'     => $criticalStockCount,
+            'active_departments' => $customerCount, // Shown as Cariler/Müşteriler in dashboard
+            'pending_requests'   => (int)($dailySummary['total_sales_count'] ?? 0) // Shown as Günlük Satışlar
         ];
 
-        // Live recent activities feed from stock movements
-        $recentActivities = $movementModel->getRecent(5);
+        // Format recent movements for view
+        $rawMovements = $movementModel->getRecent(6);
+        $recentActivities = [];
+        foreach ($rawMovements as $m) {
+            $isIncome = in_array($m['movement_type'] ?? '', ['purchase', 'sale_return', 'in']);
+            $recentActivities[] = [
+                'type'            => $isIncome ? 'in' : 'out',
+                'product_name'    => $m['product_name'] ?? 'Kırtasiye Ürünü',
+                'department_name' => !empty($m['notes']) ? $m['notes'] : ($isIncome ? 'Depo Girişi' : 'POS Satışı'),
+                'quantity'        => abs((float)($m['quantity'] ?? 0)),
+                'created_at'      => $m['created_at'] ?? date('Y-m-d H:i:s')
+            ];
+        }
+
         $pendingRequests = $requestModel->getAll('pending');
 
-        // Fetch Data for Charts (wrapped in try-catch to prevent dashboard crash)
+        // Chart Data
         $chartTrendLabels = json_encode([]);
         $chartTrendData = json_encode([]);
         $chartDeptLabels = json_encode([]);
         $chartDeptData = json_encode([]);
 
         try {
-            $db = \App\Config\Database::getConnection();
+            $db = Database::getConnection();
             if ($db) {
-                // 1. Monthly Consumption Trend (last 6 months)
+                // 1. Monthly movement trend
                 $trendStmt = $db->query("
-                    SELECT SUBSTR(created_at, 1, 7) as month, SUM(quantity) as total_qty 
+                    SELECT SUBSTR(created_at, 1, 7) as month, COUNT(*) as total_count 
                     FROM stock_movements 
-                    WHERE type = 'out' 
                     GROUP BY SUBSTR(created_at, 1, 7)
                     ORDER BY month DESC 
                     LIMIT 6
                 ");
-                $trendData = array_reverse($trendStmt->fetchAll(\PDO::FETCH_ASSOC));
+                $trendData = array_reverse($trendStmt->fetchAll(PDO::FETCH_ASSOC));
                 
                 $tLabels = [];
                 $tData = [];
-                foreach($trendData as $row) {
+                foreach ($trendData as $row) {
                     $tLabels[] = $row['month'];
-                    $tData[] = (int)$row['total_qty'];
+                    $tData[] = (int)$row['total_count'];
+                }
+                if (empty($tLabels)) {
+                    $tLabels = [date('Y-m')];
+                    $tData = [$totalStockCount];
                 }
                 $chartTrendLabels = json_encode($tLabels);
                 $chartTrendData = json_encode($tData);
 
-                // 2. Top Consuming Departments
-                $deptStmt = $db->query("
-                    SELECT d.name, SUM(sm.quantity) as total_qty 
-                    FROM stock_movements sm 
-                    JOIN departments d ON sm.department_id = d.id 
-                    WHERE sm.type = 'out' 
-                    GROUP BY d.id, d.name
+                // 2. Categories product distribution
+                $catStmt = $db->query("
+                    SELECT c.name, COUNT(p.id) as total_qty 
+                    FROM categories c 
+                    LEFT JOIN products p ON p.category_id = c.id 
+                    GROUP BY c.id, c.name
+                    HAVING total_qty > 0
                     ORDER BY total_qty DESC 
                     LIMIT 5
                 ");
-                $topDepts = $deptStmt->fetchAll(\PDO::FETCH_ASSOC);
+                $topCats = $catStmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 $dLabels = [];
                 $dData = [];
-                foreach($topDepts as $row) {
+                foreach ($topCats as $row) {
                     $dLabels[] = $row['name'];
                     $dData[] = (int)$row['total_qty'];
                 }
@@ -98,7 +125,7 @@ class DashboardController
         unset($_SESSION['flash_success']);
 
         view('dashboard.index', [
-            'pageTitle'        => 'Gösterge Paneli | Stationery Flow E-Ticaret ve Depo',
+            'pageTitle'        => 'Gösterge Paneli | Kırtasiye Stok ve Satış Sistemi',
             'currentUser'      => $currentUser,
             'stats'            => $stats,
             'recentActivities' => $recentActivities,
@@ -113,7 +140,7 @@ class DashboardController
     }
 
     /**
-     * API: Categorized Global Search across Products, Departments, and Users
+     * API: Categorized Global Search across Products, Categories, and Users
      */
     public function globalSearch(): void
     {
@@ -130,39 +157,40 @@ class DashboardController
 
         $qLower = mb_strtolower($query, 'UTF-8');
 
-        $productModel     = new Product();
-        $departmentModel = new Department();
+        $productModel  = new Product();
+        $customerModel = new Customer();
+        $userModel     = new \App\Models\User();
 
         $allProducts = $productModel->getAll();
         $matchedProducts = [];
         foreach ($allProducts as $st) {
             $nameStr = mb_strtolower($st['name'] ?? '', 'UTF-8');
             $codeStr = mb_strtolower($st['code'] ?? '', 'UTF-8');
-            if (str_contains($nameStr, $qLower) || str_contains($codeStr, $qLower)) {
+            $barcodeStr = mb_strtolower($st['barcode'] ?? '', 'UTF-8');
+            if (str_contains($nameStr, $qLower) || str_contains($codeStr, $qLower) || str_contains($barcodeStr, $qLower)) {
                 $matchedProducts[] = [
-                    'id'            => $st['id'],
-                    'name'          => $st['name'],
-                    'code'          => $st['code'],
-                    'quantity'      => $st['current_stock'],
-                    'unit'          => $st['unit']
+                    'id'       => $st['id'],
+                    'name'     => $st['name'],
+                    'code'     => $st['code'] . ' (' . ($st['barcode'] ?? '') . ')',
+                    'quantity' => $st['current_stock'],
+                    'unit'     => $st['unit']
                 ];
             }
         }
 
-        $allDepartments = $departmentModel->getAll();
-        $matchedDepartments = [];
-        foreach ($allDepartments as $d) {
-            $nameStr  = mb_strtolower($d['name'] ?? '', 'UTF-8');
+        $allCustomers = $customerModel->getAll();
+        $matchedCustomers = [];
+        foreach ($allCustomers as $c) {
+            $nameStr = mb_strtolower($c['full_name'] ?? '', 'UTF-8');
             if (str_contains($nameStr, $qLower)) {
-                $matchedDepartments[] = [
-                    'id'         => $d['id'],
-                    'full_name'  => $d['name'],
-                    'department' => $d['name']
+                $matchedCustomers[] = [
+                    'id'         => $c['id'],
+                    'full_name'  => $c['full_name'],
+                    'department' => $c['type_label'] ?? 'Müşteri'
                 ];
             }
         }
 
-        $userModel = new \App\Models\User();
         $allUsers = $userModel->getAllUsers();
         $matchedUsers = [];
         foreach ($allUsers as $u) {
@@ -180,10 +208,9 @@ class DashboardController
         echo json_encode([
             'success'   => true,
             'products'  => array_slice($matchedProducts, 0, 5),
-            'personnel' => array_slice($matchedDepartments, 0, 5),
+            'personnel' => array_slice($matchedCustomers, 0, 5),
             'users'     => array_slice($matchedUsers, 0, 3)
         ]);
         exit;
     }
 }
-

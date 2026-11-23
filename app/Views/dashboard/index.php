@@ -70,44 +70,44 @@
                     </a>
                 </div>
 
-                <!-- 3. Personel / Birim -->
+                <!-- 3. Müşteriler / Cariler -->
                 <div class="col-12 col-sm-6 col-lg-3 fade-up delay-3">
-                    <a href="<?= base_url('departments') ?>" class="text-decoration-none d-block h-100">
+                    <a href="<?= base_url('customers') ?>" class="text-decoration-none d-block h-100">
                         <div class="ds-card h-100 hover-lift">
                             <div class="ds-card-body d-flex flex-column h-100 justify-content-between">
                                 <div class="ds-stat-card">
                                     <div class="ds-stat-icon" style="background: var(--c-info-subtle); color: var(--c-info);">
-                                        🏢
+                                        👥
                                     </div>
                                     <div class="ds-stat-info">
-                                        <p>Kayıtlı Başkanlıklar</p>
+                                        <p>Müşteriler & Cariler</p>
                                         <h3 class="counter-up" data-count="<?= (int)($stats['active_departments'] ?? 0) ?>">0</h3>
                                     </div>
                                 </div>
                                 <div class="ds-stat-trend text-muted mt-3">
-                                    Hizmet Verilen Birim Sayısı
+                                    Öğrenci, Öğretmen & Okul
                                 </div>
                             </div>
                         </div>
                     </a>
                 </div>
 
-                <!-- 4. Bekleyen Talepler -->
+                <!-- 4. Günlük Satışlar -->
                 <div class="col-12 col-sm-6 col-lg-3 fade-up delay-4">
-                    <a href="<?= base_url('requests') ?>" class="text-decoration-none d-block h-100">
+                    <a href="<?= base_url('sales') ?>" class="text-decoration-none d-block h-100">
                         <div class="ds-card h-100 hover-lift">
                             <div class="ds-card-body d-flex flex-column h-100 justify-content-between">
                                 <div class="ds-stat-card">
                                     <div class="ds-stat-icon" style="background: var(--c-warning-subtle); color: var(--c-warning);">
-                                        📨
+                                        🧾
                                     </div>
                                     <div class="ds-stat-info">
-                                        <p>Bekleyen Talepler</p>
+                                        <p>Günlük Satışlar / Fiş</p>
                                         <h3 class="counter-up" data-count="<?= (int)($stats['pending_requests'] ?? 0) ?>">0</h3>
                                     </div>
                                 </div>
-                                <div class="ds-stat-trend text-muted mt-3">
-                                    Onay Bekleyen İstekler
+                                <div class="ds-stat-trend text-success mt-3">
+                                    Bugün Tamamlanan POS Satışı
                                 </div>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                 <div class="col-12 col-lg-4 fade-up delay-3">
                     <div class="ds-card h-100">
                         <div class="ds-card-header">
-                            <h6 class="ds-card-title"><i class="bi bi-bar-chart-fill me-2 text-success"></i> Başkanlıklara Göre Dağıtım</h6>
+                            <h6 class="ds-card-title"><i class="bi bi-pie-chart-fill me-2 text-success"></i> Kategorilere Göre Dağılım</h6>
                         </div>
                         <div class="ds-card-body d-flex align-items-center justify-content-center">
                             <div style="position: relative; height:250px; width:100%">

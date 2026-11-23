@@ -259,3 +259,4 @@ class Sale
         return $stats;
     }
 }
+

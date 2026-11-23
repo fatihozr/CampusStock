@@ -53,7 +53,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (empty($_SESSION['active_module'])) {
-    $_SESSION['active_module'] = 'cleaning';
+    $_SESSION['active_module'] = 'stationery';
 }
 
 // Load Web Routes

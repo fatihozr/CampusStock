@@ -49,3 +49,4 @@ class CashMovement
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+

@@ -112,3 +112,4 @@ class Brand
         return trim(preg_replace('/-+/', '-', $text), '-');
     }
 }
+

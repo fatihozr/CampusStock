@@ -175,6 +175,14 @@ class Product
     }
 
     /**
+     * Get count of critical stock items
+     */
+    public function getCriticalStockCount(): int
+    {
+        return count($this->getCriticalStock(500));
+    }
+
+    /**
      * Create a new stationery product
      */
     public function create(array $data): int

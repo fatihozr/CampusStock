@@ -99,3 +99,4 @@ class ReportApiController extends BaseApiController
         $this->success($data, 'Stok envanter ve mağaza değerleme raporu');
     }
 }
+

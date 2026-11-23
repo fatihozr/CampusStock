@@ -85,3 +85,4 @@ class SaleController
         redirect('/sales/detail?id=' . $saleId);
     }
 }
+
