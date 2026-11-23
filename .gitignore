@@ -2,6 +2,7 @@
 .env
 
 # Geçici Depolama & Loglar
+*.log
 storage/logs/*.log
 storage/cache/*
 storage/sessions/*
@@ -11,7 +12,9 @@ storage/sessions/*
 
 # Bağımlılıklar
 vendor/
+/vendor/
 composer.phar
+.phpunit.result.cache
 
 # İşletim Sistemi Dosyaları
 .DS_Store
@@ -23,4 +26,3 @@ desktop.ini
 .vscode/
 *.sublime-project
 *.sublime-workspace
-
