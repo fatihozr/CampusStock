@@ -103,6 +103,13 @@ Router::post('/users/delete', [UserController::class, 'deleteUser']);
 // 6. FRONTEND İÇİN RESTFUL JSON API (V1) ROTALARI
 // ==========================================================
 
+// Sistem Sağlık Kontrolü (Healthcheck)
+Router::get('/api/saglik', function() {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['durum' => 'çalışıyor', 'servis' => 'CampusStock Backend', 'timestamp' => date('c')], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
 // Kimlik Doğrulama & Kullanıcı API (Auth)
 Router::post('/api/v1/auth/login', [AuthApiController::class, 'login']);
 Router::post('/api/v1/auth/register', [AuthApiController::class, 'register']);
