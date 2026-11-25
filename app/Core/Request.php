@@ -77,12 +77,12 @@ final class Request
         return $this->basliklar[strtolower($ad)] ?? null;
     }
 
-    public function parametre(string $ad): ?int
+    public function parametre(string $ad): mixed
     {
         return $this->parametreler[$ad] ?? null;
     }
 
-    /** @param array<string, int> $parametreler */
+    /** @param array<string, mixed> $parametreler */
     public function parametreleriAyarla(array $parametreler): void
     {
         $this->parametreler = $parametreler;

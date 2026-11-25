@@ -63,10 +63,18 @@ final class Router
 
     public function calistir(Request $istek): void
     {
+        if ($istek->metot === 'OPTIONS') {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+            http_response_code(200);
+            exit;
+        }
+
         $sonuc = $this->eslestir($istek->metot, $istek->yol);
 
         if ($sonuc['durum'] === 404) {
-            Response::hata('Aradığınız sayfa bulunamadı.', 404);
+            Response::hata('Aradığınız sayfa veya API adresi bulunamadı.', 404);
         }
         if ($sonuc['durum'] === 405) {
             header('Allow: ' . implode(', ', $sonuc['izinli']));
@@ -97,7 +105,7 @@ final class Router
         ];
     }
 
-    /** @return array<string, int>|null Eşleşmezse null, eşleşirse yakalanan parametreler */
+    /** @return array<string, mixed>|null Eşleşmezse null, eşleşirse yakalanan parametreler */
     private static function yolEslesir(string $desen, string $yol): ?array
     {
         $desenParcalari = explode('/', trim($desen, '/'));
@@ -110,10 +118,15 @@ final class Router
         $parametreler = [];
         foreach ($desenParcalari as $i => $parca) {
             if (preg_match('/^\{(\w+)\}$/', $parca, $eslesme) === 1) {
-                if (preg_match('/^[1-9]\d{0,9}$/', $yolParcalari[$i]) !== 1) {
-                    return null;
+                $paramAd = $eslesme[1];
+                if ($paramAd === 'id' || str_ends_with($paramAd, '_id')) {
+                    if (preg_match('/^[1-9]\d{0,9}$/', $yolParcalari[$i]) !== 1) {
+                        return null;
+                    }
+                    $parametreler[$paramAd] = (int) $yolParcalari[$i];
+                } else {
+                    $parametreler[$paramAd] = $yolParcalari[$i];
                 }
-                $parametreler[$eslesme[1]] = (int) $yolParcalari[$i];
             } elseif ($parca !== $yolParcalari[$i]) {
                 return null;
             }

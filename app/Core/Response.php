@@ -14,6 +14,9 @@ final class Response
     {
         http_response_code($kod);
         header('Content-Type: application/json; charset=utf-8');
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
         header('Cache-Control: no-store'); // kişisel veri tarayıcı önbelleğinde kalmasın
 
         echo json_encode(
