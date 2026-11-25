@@ -10,8 +10,9 @@ use App\Controllers\CategoryController;
 use App\Controllers\BrandController;
 use App\Controllers\CustomerController;
 use App\Controllers\ReportController;
-use App\Controllers\ImportController;
 use App\Controllers\UserController;
+use App\Controllers\StoreWebController;
+use App\Controllers\ReturnWebController;
 
 // API Controllers
 use App\Controllers\Api\ProductApiController;
@@ -24,7 +25,6 @@ use App\Controllers\Api\AuthApiController;
 use App\Controllers\Api\UniversityApiController;
 use App\Controllers\Api\StoreApiController;
 use App\Controllers\Api\OrderApiController;
-use App\Controllers\Api\PrintJobApiController;
 
 // ==========================================================
 // 1. KULLANICI KİMLİK DOĞRULAMA (AUTH) ROTALARI
@@ -86,12 +86,14 @@ Router::get('/reports', [ReportController::class, 'index']);
 Router::get('/reports/export', [ReportController::class, 'export']);
 Router::get('/reports/pdf', [ReportController::class, 'pdf']);
 
-// Excel İçe Aktarım
-Router::get('/import', [ImportController::class, 'index']);
-Router::post('/import/upload', [ImportController::class, 'upload']);
-Router::post('/import/preview', [ImportController::class, 'preview']);
-Router::post('/import/process', [ImportController::class, 'process']);
-Router::get('/import/template', [ImportController::class, 'template']);
+// Üniversiteler & Kırtasiye Şubeleri
+Router::get('/stores', [StoreWebController::class, 'index']);
+Router::post('/stores/store', [StoreWebController::class, 'storeBranch']);
+Router::post('/universities/store', [StoreWebController::class, 'storeUniversity']);
+
+// İade Talepleri
+Router::get('/returns', [ReturnWebController::class, 'index']);
+Router::post('/returns/status', [ReturnWebController::class, 'updateStatus']);
 
 // Kullanıcılar
 Router::get('/users', [UserController::class, 'index']);
@@ -134,15 +136,6 @@ Router::post('/api/v1/orders/verify-pickup', [OrderApiController::class, 'verify
 Router::get('/api/v1/orders/{id}', [OrderApiController::class, 'show']);
 Router::put('/api/v1/orders/{id}/status', [OrderApiController::class, 'updateStatus']);
 Router::post('/api/v1/orders/{id}/status', [OrderApiController::class, 'updateStatus']);
-
-// Fotokopi & Belge Baskı Hizmeti API
-Router::get('/api/v1/print-jobs/pricing', [PrintJobApiController::class, 'pricing']);
-Router::post('/api/v1/print-jobs/calculate', [PrintJobApiController::class, 'calculate']);
-Router::get('/api/v1/print-jobs', [PrintJobApiController::class, 'index']);
-Router::post('/api/v1/print-jobs', [PrintJobApiController::class, 'store']);
-Router::get('/api/v1/print-jobs/{id}', [PrintJobApiController::class, 'show']);
-Router::put('/api/v1/print-jobs/{id}/status', [PrintJobApiController::class, 'updateStatus']);
-Router::post('/api/v1/print-jobs/{id}/status', [PrintJobApiController::class, 'updateStatus']);
 
 // Ürün API
 Router::get('/api/v1/products', [ProductApiController::class, 'index']);

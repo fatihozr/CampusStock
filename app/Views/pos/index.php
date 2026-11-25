@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\Auth;
-require_once dirname(__DIR__, 2) . '/includes/header.php';
-require_once dirname(__DIR__, 2) . '/includes/sidebar.php';
+require_once dirname(__DIR__, 3) . '/includes/header.php';
+require_once dirname(__DIR__, 3) . '/includes/sidebar.php';
 ?>
 
 <div class="content-wrapper p-3" style="min-height: calc(100vh - 65px); background: #F1F5F9;">
@@ -531,5 +531,5 @@ function filterCatalog(catId, search) {
 }
 </script>
 
-<?php require_once dirname(__DIR__, 2) . '/includes/footer.php'; ?>
+<?php require_once dirname(__DIR__, 3) . '/includes/footer.php'; ?>
 

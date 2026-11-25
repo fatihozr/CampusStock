@@ -33,7 +33,7 @@
                             <div class="ds-card-body d-flex flex-column h-100 justify-content-between">
                                 <div class="ds-stat-card">
                                     <div class="ds-stat-icon" style="background: var(--c-primary-subtle); color: var(--c-primary);">
-                                        <?= $_SESSION['active_module'] === 'furniture' ? '🪑' : '📦' ?>
+                                        ✏️
                                     </div>
                                     <div class="ds-stat-info">
                                         <p>Toplam Ürün Çeşidi</p>

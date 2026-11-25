@@ -2,83 +2,67 @@
 
 namespace App\Models;
 
-use App\Config\Database;
-use PDO;
-
 class Role
 {
-    private ?PDO $db;
+    private array $roles = [
+        [
+            'id'          => 1,
+            'slug'        => 'admin',
+            'name'        => 'Genel Admin',
+            'description' => 'Tüm üniversiteler, kırtasiyeler, kullanıcılar ve sistem ayarları üzerinde tam yetki.',
+            'permissions' => ['dashboard', 'inventory', 'stocks', 'stock_in', 'stock_out', 'reports', 'users', 'admin']
+        ],
+        [
+            'id'          => 2,
+            'slug'        => 'kadmin',
+            'name'        => 'Kırtasiye Yöneticisi (KAdmin)',
+            'description' => 'Kendi kırtasiye şubesinin ürünlerini, stoklarını, siparişlerini ve iadelerini yönetir.',
+            'permissions' => ['dashboard', 'inventory', 'stocks', 'stock_in', 'stock_out', 'reports']
+        ],
+        [
+            'id'          => 3,
+            'slug'        => 'uye',
+            'name'        => 'Üye (Öğrenci / Müşteri)',
+            'description' => 'Kırtasiye ürünlerini görüntüler, sepete ekler, sipariş verir ve iade talebi oluşturur.',
+            'permissions' => ['dashboard']
+        ]
+    ];
 
-    public function __construct()
-    {
-        $this->db = Database::getConnection();
-    }
-
-    /**
-     * Get all defined roles
-     */
     public function getAll(): array
     {
-        if (!$this->db) return [];
-        $stmt = $this->db->query("SELECT * FROM roles ORDER BY id ASC");
-        $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($roles as &$role) {
-            if (isset($role['permissions']) && is_string($role['permissions'])) {
-                $role['permissions'] = json_decode($role['permissions'], true) ?? [];
-            } else {
-                $role['permissions'] = [];
-            }
-        }
-        return $roles;
+        return $this->roles;
     }
 
-    /**
-     * Find role by ID
-     */
     public function find(int $id): ?array
     {
-        if (!$this->db) return null;
-        $stmt = $this->db->prepare("SELECT * FROM roles WHERE id = :id LIMIT 1");
-        $stmt->execute(['id' => $id]);
-        $role = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $role ?: null;
+        foreach ($this->roles as $role) {
+            if ($role['id'] === $id) {
+                return $role;
+            }
+        }
+        return null;
     }
 
-    /**
-     * Find role by slug
-     */
     public function findBySlug(string $slug): ?array
     {
-        if (!$this->db) return null;
-        $stmt = $this->db->prepare("SELECT * FROM roles WHERE slug = :slug LIMIT 1");
-        $stmt->execute(['slug' => $slug]);
-        $role = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($role && isset($role['permissions']) && is_string($role['permissions'])) {
-            $role['permissions'] = json_decode($role['permissions'], true) ?? [];
+        foreach ($this->roles as $role) {
+            if ($role['slug'] === $slug) {
+                return $role;
+            }
         }
-        return $role ?: null;
+        return $this->roles[0];
     }
 
     public static function getAvailableModules(): array
     {
         return [
-            'dashboard' => 'Gösterge Paneli',
-            'inventory' => 'Stok ve Envanter Yönetimi',
-            'requests'  => 'Malzeme Talepleri',
-            'approvals' => 'Talep Onaylama',
-            'procurement' => 'Satın Alma ve İhale',
-            'delivery'  => 'Mal Kabul ve Kalite',
-            'counts'    => 'Fiziksel Sayımlar',
+            'dashboard' => 'Kontrol Paneli',
+            'inventory' => 'Ürün & Stok Yönetimi',
+            'stock_in'  => 'Stok Girişi',
+            'stock_out' => 'Stok Çıkışı',
             'reports'   => 'Raporlar',
-            'users'     => 'Kullanıcı ve Ayarlar'
+            'users'     => 'Kullanıcı & Rol Yönetimi',
+            'admin'     => 'Tam Yönetici Yetkisi'
         ];
-    }
-
-    public function updatePermissions(int $roleId, array $permissions): bool
-    {
-        if (!$this->db) return false;
-        $json = json_encode($permissions);
-        $stmt = $this->db->prepare("UPDATE roles SET permissions = :permissions WHERE id = :id");
-        return $stmt->execute(['permissions' => $json, 'id' => $roleId]);
     }
 }

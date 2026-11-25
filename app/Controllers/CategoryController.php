@@ -25,7 +25,7 @@ class CategoryController
         $categories = $this->categoryModel->getAll();
 
         view('category.index', [
-            'pageTitle'    => 'Temizlik Malzemesi Kategorileri',
+            'pageTitle'    => 'Kırtasiye Kategorileri',
             'currentUser'  => Auth::user(),
             'categories'   => $categories,
             'flashSuccess' => $_SESSION['flash_success'] ?? null,
