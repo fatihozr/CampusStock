@@ -1,9 +1,17 @@
 <?php
 
 /**
- * Belediye Destek Birimi Envanter ve Stok Takip Sistemi
+ * CampusStock — Üniversite Kırtasiye Stok & Satış Platformu
  * Front Controller (Giriş Noktası)
  */
+
+// OWASP Temel Güvenlik Başlıkları
+if (!headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
 
 // Autoloader setup
 $autoloadPath = __DIR__ . '/vendor/autoload.php';

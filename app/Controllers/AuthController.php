@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Auth;
+use App\Helpers\Csrf;
 use App\Models\User;
 
 class AuthController
@@ -19,7 +20,6 @@ class AuthController
      */
     public function login(): void
     {
-        // Redirect to dashboard if already authenticated
         Auth::requireGuest();
 
         $flashError = $_SESSION['flash_error'] ?? null;
@@ -27,7 +27,7 @@ class AuthController
         unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
         view('auth.login', [
-            'pageTitle'    => 'Giriş Yap | Stationery Flow E-Ticaret ve Depo',
+            'pageTitle'    => 'Giriş Yap | CampusStock Kırtasiye',
             'flashError'   => $flashError,
             'flashSuccess' => $flashSuccess
         ]);
@@ -40,50 +40,39 @@ class AuthController
     {
         Auth::requireGuest();
 
+        if (!Csrf::verify($_POST['_csrf_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Güvenlik doğrulaması (CSRF) geçersiz. Lütfen sayfayı yenileyip tekrar deneyin.';
+            redirect('/login');
+            return;
+        }
+
         $identifier = trim($_POST['username_or_email'] ?? $_POST['email'] ?? '');
         $password   = trim($_POST['password'] ?? '');
         $remember   = isset($_POST['remember']);
 
-        // Input validation
         if (empty($identifier) || empty($password)) {
             $_SESSION['flash_error'] = 'Lütfen kullanıcı adı / e-posta ve şifrenizi giriniz.';
             redirect('/login');
             return;
         }
 
-        // Find user by username or email
         $user = $this->userModel->findByUsernameOrEmail($identifier);
-
-        if (!$user) {
+        if (!$user || !$this->userModel->verifyPassword($password, $user['password_hash'])) {
             $_SESSION['flash_error'] = 'Girdiğiniz kullanıcı adı / e-posta veya şifre hatalı!';
             redirect('/login');
             return;
         }
 
-        // Verify password using native password_verify
-        $isPasswordCorrect = $this->userModel->verifyPassword($password, $user['password_hash']);
-        if ($user['username'] === 'admin' && $password === '123456') {
-            $isPasswordCorrect = true;
-        }
-
-        if (!$isPasswordCorrect) {
-            $_SESSION['flash_error'] = 'Girdiğiniz kullanıcı adı / e-posta veya şifre hatalı!';
-            redirect('/login');
-            return;
-        }
-
-        // Check if account is active
         if (($user['status'] ?? 'active') !== 'active') {
-            $_SESSION['flash_error'] = 'Hesabınız pasif durumdadır. Bilgi İşlem ile iletişime geçiniz.';
+            $_SESSION['flash_error'] = 'Hesabınız pasif durumdadır. Sistem yöneticisi ile iletişime geçiniz.';
             redirect('/login');
             return;
         }
 
-        // Authentication successful: Log in user
         Auth::login($user, $remember);
         $this->userModel->updateLastLogin($user['id']);
 
-        $_SESSION['flash_success'] = 'Giriş başarılı. Hoş geldiniz, ' . htmlspecialchars($user['first_name']);
+        $_SESSION['flash_success'] = 'Giriş başarılı. Hoş geldiniz, ' . htmlspecialchars($user['first_name'], ENT_QUOTES, 'UTF-8');
         redirect('/dashboard');
     }
 

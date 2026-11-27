@@ -504,16 +504,30 @@ function initThemeManager() {
         }
     }
 
-    const currentTheme = localStorage.getItem('belediye_theme') || 'light';
+    const currentTheme = localStorage.getItem('campusstock_theme') || localStorage.getItem('belediye_theme') || 'light';
     applyTheme(currentTheme);
 
     if (themeBtn) {
         themeBtn.addEventListener('click', () => {
             const activeTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
             const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('belediye_theme', newTheme);
+            localStorage.setItem('campusstock_theme', newTheme);
             applyTheme(newTheme);
         });
     }
 }
+
+// Form gönderimlerinde çift tıklamayı önleyen loading durumu
+document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || form.dataset.noLoading === 'true') return;
+    if (form.classList.contains('needs-validation') && !form.checkValidity()) return;
+
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn && !btn.disabled) {
+        btn.dataset.originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>İşleniyor...';
+    }
+});
 

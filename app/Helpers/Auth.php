@@ -7,7 +7,7 @@ use App\Models\User;
 
 class Auth
 {
-    private const REMEMBER_COOKIE_NAME = 'belediye_remember_token';
+    private const REMEMBER_COOKIE_NAME = 'campusstock_remember_token';
 
     /**
      * Start session if not started
@@ -167,7 +167,7 @@ class Auth
         $user = self::user();
         if (empty($user)) return false;
         $slug = strtolower($user['role_slug'] ?? '');
-        return in_array($slug, ['admin', 'director', 'it_staff', 'warehouse_manager'], true) || (int)($user['role_id'] ?? 0) === 1;
+        return in_array($slug, ['admin', 'kadmin', 'director', 'warehouse_manager'], true) || (int)($user['role_id'] ?? 0) === 1;
     }
 
     /**

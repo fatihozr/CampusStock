@@ -222,11 +222,11 @@
         <div class="glass-card">
             <!-- Header -->
             <div class="login-header">
-                <div class="brand-icon-wrapper">
-                    <i class="bi bi-cart4"></i>
+                <div class="brand-icon-wrapper" aria-hidden="true">
+                    <i class="bi bi-book-half"></i>
                 </div>
-                <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">STATIONERY FLOW</h4>
-                <p class="mb-0 fs-7 text-muted">E-Ticaret ve Depo Yönetim Platformu</p>
+                <h1 class="h4 fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">CAMPUSSTOCK KIRTASİYE</h1>
+                <p class="mb-0 fs-7 text-muted">Kampüs Kırtasiye Stok & Satış Yönetim Paneli</p>
             </div>
 
             <!-- Body -->
@@ -246,34 +246,37 @@
                 <?php endif; ?>
 
                 <form action="<?= base_url('login') ?>" method="POST" id="loginForm" class="needs-validation" novalidate>
+                    <?= \App\Helpers\Csrf::field() ?>
                     <div class="mb-3">
                         <label for="username_or_email" class="form-label fw-semibold fs-7 text-dark ms-1">Kullanıcı Adı veya E-Posta</label>
                         <div class="input-group shadow-sm rounded-3">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <span class="input-group-text" aria-hidden="true"><i class="bi bi-person"></i></span>
                             <input type="text" class="form-control border-start-0 ps-0" id="username_or_email" name="username_or_email" placeholder="admin" required autofocus autocomplete="username">
+                            <div class="invalid-feedback">Lütfen kullanıcı adı veya e-posta giriniz.</div>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <label for="password" class="form-label fw-semibold fs-7 text-dark ms-1">Parola</label>
                         <div class="input-group shadow-sm rounded-3">
-                            <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                            <span class="input-group-text" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
                             <input type="password" class="form-control border-start-0 border-end-0 px-0" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-                            <span class="input-group-text toggle-password" id="btnTogglePassword" title="Şifreyi Göster/Gizle">
-                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
-                            </span>
+                            <button type="button" class="input-group-text toggle-password" id="btnTogglePassword" title="Şifreyi Göster/Gizle" aria-label="Şifreyi Göster veya Gizle">
+                                <i class="bi bi-eye-slash" id="toggleIcon" aria-hidden="true"></i>
+                            </button>
+                            <div class="invalid-feedback">Lütfen parolanızı giriniz.</div>
                         </div>
                     </div>
 
                     <button type="submit" id="btnSubmit" class="btn btn-primary w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
                         <span id="btnText">Giriş Yap</span>
-                        <i class="bi bi-arrow-right fs-5" id="btnIcon"></i>
+                        <i class="bi bi-arrow-right fs-5" id="btnIcon" aria-hidden="true"></i>
                     </button>
                 </form>
             </div>
             
             <div class="text-center pb-4 pt-1">
-                <small class="text-muted fs-8 fw-medium">Stationery Flow E-Ticaret &copy; <?= date('Y') ?></small>
+                <small class="text-muted fs-8 fw-medium">CampusStock Kırtasiye Platformu &copy; <?= date('Y') ?></small>
             </div>
         </div>
     </div>

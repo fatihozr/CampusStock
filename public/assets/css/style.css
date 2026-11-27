@@ -614,3 +614,48 @@ a:hover { color: var(--c-primary-hover); }
 .ts-dropdown {
     z-index: 9999 !important;
 }
+
+/* 9. WCAG 2.2 AA ACCESSIBILITY & RESPONSIVE POLISH */
+.skip-link:focus {
+    position: fixed !important;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 9999;
+    background: var(--c-primary);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+
+:focus-visible {
+    outline: 3px solid var(--c-primary) !important;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .fade-up {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ds-btn, .header-btn, .btn {
+        min-height: 44px;
+    }
+    .main-content {
+        padding: 0.875rem;
+    }
+    .ds-card-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
