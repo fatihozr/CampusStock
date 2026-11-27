@@ -1,0 +1,48 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1. Güvenlik: Hassas dosyalara ve klasörlere tarayıcı üzerinden erişimi engelle
+    RewriteRule ^(\.env|database\.sqlite|composer\.json|app/|includes/|routes/|storage/|docs/|scripts/|modules/) - [F,L,NC]
+
+    # 2. İstenen dosya veya klasör gerçekten varsa (resim, css, js) ona izin ver
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # 3. Kalan tüm istekleri index.php'ye yönlendir (Router REQUEST_URI üzerinden çalışır)
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Dizin listelemeyi kapat (Klasör içini göstermesin)
+Options -Indexes
+
+# .htaccess dosyasının kendisini koru
+<Files .htaccess>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# GZIP Sıkıştırma (Performans)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# Tarayıcı Önbellekleme (Cache-Control)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresDefault "access plus 2 days"
+</IfModule>

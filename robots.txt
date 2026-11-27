@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /login
+Disallow: /api/
+Disallow: /storage/
+Disallow: /veritabani_ve_kurulum/
+
+Sitemap: http://localhost:8000/sitemap.xml

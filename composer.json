@@ -1,0 +1,17 @@
+{
+    "name": "belediye/envanter-stok",
+    "description": "Belediye Destek Birimi Envanter ve Stok Takip Sistemi",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/Helpers/functions.php"
+        ]
+    },
+    "require": {
+        "php": ">=8.2"
+    }
+}
