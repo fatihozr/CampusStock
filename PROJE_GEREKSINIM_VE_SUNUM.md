@@ -84,3 +84,349 @@
 * **Routing:** Web ve `/api/v1/*` rotaları `app/Config/Router.php` (`routes/web.php`), GitHub çekirdek rotaları `app/Core/Router.php` (`config/routes.php`) üzerinden yönetilir.
 * **Backend İletişimi:** İstemci `fetch()` ile JSON gönderir; sunucu standart HTTP durum kodları (`200`, `201`, `400`, `401`, `404`, `405`, `422`) ve UTF-8 JSON yanıtı döner.
 * **Doğrulama:** İstemci tarafında HTML5 + Bootstrap `.needs-validation`, sunucu tarafında ise CSRF token, zorunlu alan kontrolü, sayısal sınır ve tip doğrulaması yapılır.
+
+---
+
+## 10. Backend UML Sınıf ve Fonksiyon Diyagramı
+
+Aşağıdaki UML sınıf diyagramı, CampusStock backend mimarisindeki tüm katmanları (**Core/Config/Helpers**, **Services**, **Models** ve **Controllers**) ve bu sınıfların gerçek fonksiyon imzalarını göstermektedir.
+
+### 10.1 Çekirdek Altyapı, Güvenlik & Servis Katmanı (Core, Helpers, Services)
+
+```mermaid
+classDiagram
+    class App {
+        -array config
+        +init() void
+        +get(string key, mixed default) mixed
+        -loadEnv() void
+    }
+
+    class Database {
+        -PDO instance
+        +getConnection() PDO
+    }
+
+    class ConfigRouter {
+        -array routes
+        +get(string path, callable handler) void
+        +post(string path, callable handler) void
+        +put(string path, callable handler) void
+        +delete(string path, callable handler) void
+        +options(string path, callable handler) void
+        +dispatch() void
+    }
+
+    class CoreRouter {
+        -array rotalar
+        +get(string yol, array hedef, array araKatmanlar) void
+        +post(string yol, array hedef, array araKatmanlar) void
+        +put(string yol, array hedef, array araKatmanlar) void
+        +delete(string yol, array hedef, array araKatmanlar) void
+        +eslestir(string metot, string yol) array
+        +calistir(Request istek) void
+    }
+
+    class Request {
+        +string metot
+        +string yol
+        +bool govdeHatali
+        +yakala() Request
+        +sorgu(string ad, mixed varsayilan) mixed
+        +girdi(string ad, mixed varsayilan) mixed
+        +tumGirdi() array
+        +baslik(string ad) string
+        +parametre(string ad) mixed
+        +apiMi() bool
+    }
+
+    class Response {
+        +json(mixed veri, int kod) never
+        +hata(string mesaj, int kod, array ek) never
+        +bos(int kod) never
+    }
+
+    class Auth {
+        +init() void
+        +check() bool
+        +user() array
+        +login(array user, bool remember) void
+        +logout() void
+        +requireAuth() void
+        +requireGuest() void
+        +hasPermission(string module) bool
+        +isAdmin() bool
+        +isManager() bool
+        +hasRole(string roles) bool
+        +requirePermission(string module) void
+    }
+
+    class Csrf {
+        +token() string
+        +field() string
+        +verify(string token) bool
+    }
+
+    class MockDataService {
+        +init() void
+        +reset() void
+        +all(string table) array
+        +saveAll(string table, array rows) void
+        +find(string table, int id) array
+        +nextId(string table) int
+    }
+
+    class PosService {
+        -Product productModel
+        -Sale saleModel
+        -Customer customerModel
+        +calculateCart(array rawItems, int customerId, float customDiscountRate) array
+        +checkout(array data, int userId) array
+        +processReturn(int saleId, int saleItemId, float returnQuantity, string reason, int userId) array
+    }
+
+    class OrderService {
+        -Order orderModel
+        -Product productModel
+        -StockMovement stockMovementModel
+        +createOrder(int studentId, array data) array
+        +verifyPickup(string code) array
+        +deliverOrder(int orderId, string paymentMethod) array
+        +cancelOrder(int orderId) array
+    }
+
+    PosService --> MockDataService : kullanir
+    CoreRouter --> Request : yakalar
+    CoreRouter --> Response : yanitlar
+```
+
+### 10.2 Veri Modelleri Katmanı (Models)
+
+```mermaid
+classDiagram
+    class Product {
+        +getAll(array filters) array
+        +find(int id) array
+        +findByBarcode(string barcode) array
+        +findByCode(string code) array
+        +getCriticalStock(int limit) array
+        +getCriticalStockCount() int
+        +create(array data) int
+        +update(int id, array data) bool
+        +delete(int id, bool softDelete) bool
+        +adjustStock(int productId, float quantityChange, string type) bool
+        +decreaseStock(int productId, float quantity) bool
+        +increaseStock(int productId, float quantity) bool
+        +generateCode() string
+        +count(array filters) int
+    }
+
+    class Category {
+        +getAll() array
+        +find(int id) array
+        +store(array data) int
+        +create(array data) int
+    }
+
+    class Brand {
+        +getAll() array
+        +find(int id) array
+        +create(array data) int
+    }
+
+    class University {
+        +getAll(bool onlyActive) array
+        +find(int id) array
+        +store(array data) array
+    }
+
+    class Store {
+        +getAll(int universityId, bool onlyActive) array
+        +find(int id) array
+        +store(array data) array
+        +getStoreProducts(int storeId, array filters) array
+    }
+
+    class Sale {
+        +getAll(array filters) array
+        +find(int id) array
+        +getDailySummary(string date) array
+        +create(array saleData, array items) int
+        +updateOrderStatus(int id, string orderStatus, string cargoCompany, string cargoTracking) bool
+    }
+
+    class Order {
+        +createOrder(array orderData, array items) array
+        +findById(int id) array
+        +findByOrderNo(string orderNo) array
+        +findByPickupCode(string code) array
+        +getOrderItems(int orderId) array
+        +getAll(array filters) array
+        +updateStatus(int id, string status, string paymentStatus) bool
+    }
+
+    class StockMovement {
+        +getRecent(int limit) array
+        +getAll(array filters) array
+        +getPendingMovements() array
+        +record(array data) int
+    }
+
+    class Customer {
+        +getAll(array filters) array
+        +find(int id) array
+        +create(array data) int
+        +adjustBalance(int id, float amount) bool
+    }
+
+    class User {
+        +findByUsernameOrEmail(string identifier) array
+        +verifyPassword(string password, string hash) bool
+        +getAllUsers() array
+        +find(int id) array
+        +storeUser(array data) array
+        +updateUser(int id, array data) bool
+        +deleteUser(int id) bool
+        +updateLastLogin(int userId) void
+    }
+
+    class Role {
+        +getAll() array
+        +find(int id) array
+        +findBySlug(string slug) array
+        +getAvailableModules() array
+    }
+
+    class ApiToken {
+        +createToken(int userId, string name, int lifetimeDays) array
+        +findUserByToken(string token) array
+        +revokeToken(string token) bool
+    }
+
+    University "1" --> "0..*" Store : icerir
+    Category "1" --> "0..*" Product : gruplar
+    Brand "1" --> "0..*" Product : markalar
+    Product "1" --> "0..*" StockMovement : izler
+    User "1" --> "0..*" ApiToken : yetkilendirir
+    User "0..*" --> "1" Role : atanir
+```
+
+### 10.3 Denetleyici Katmanı (Web & Core REST API Controllers)
+
+```mermaid
+classDiagram
+    class AuthController {
+        +login() void
+        +handleLogin() void
+        +logout() void
+    }
+
+    class DashboardController {
+        +index() void
+        +globalSearch() void
+    }
+
+    class StockController {
+        +index() void
+        +create() void
+        +store() void
+        +detail() void
+        +update() void
+        +delete() void
+        +stockIn() void
+        +stockOut() void
+        +movements() void
+    }
+
+    class PosController {
+        +index() void
+    }
+
+    class SaleController {
+        +index() void
+        +detail() void
+        +handleReturn() void
+    }
+
+    class ReturnWebController {
+        +index() void
+        +updateStatus() void
+    }
+
+    class StoreWebController {
+        +index() void
+        +storeUniversity() void
+        +storeBranch() void
+    }
+
+    class CategoryController {
+        +index() void
+        +store() void
+    }
+
+    class BrandController {
+        +index() void
+        +store() void
+    }
+
+    class CustomerController {
+        +index() void
+        +store() void
+        +handlePayment() void
+    }
+
+    class ReportController {
+        +index() void
+        +export() void
+        +pdf() void
+    }
+
+    class UserController {
+        +index() void
+        +storeUser() void
+        +updateUser() void
+        +deleteUser() void
+    }
+
+    class KimlikController {
+        +giris(Request istek) void
+        +kayit(Request istek) void
+        +profil(Request istek) void
+    }
+
+    class UniversiteController {
+        +liste(Request istek) void
+        +detay(Request istek) void
+        +kirtasiyeler(Request istek) void
+    }
+
+    class KirtasiyeController {
+        +liste(Request istek) void
+        +detay(Request istek) void
+        +urunler(Request istek) void
+    }
+
+    class UrunController {
+        +liste(Request istek) void
+        +detay(Request istek) void
+        +barkod(Request istek) void
+    }
+
+    class SepetController {
+        +goster(Request istek) void
+        +ekle(Request istek) void
+        +sil(Request istek) void
+    }
+
+    class SiparisController {
+        +olustur(Request istek) void
+        +liste(Request istek) void
+        +detay(Request istek) void
+        +kodDogrula(Request istek) void
+        +durumGuncelle(Request istek) void
+    }
+
+    class SaglikController {
+        +goster(Request istek) void
+    }
+```
